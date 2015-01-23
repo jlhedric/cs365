@@ -2,11 +2,23 @@
 
 import sys
 
-def dostuff():
+def dostuff(filename):
 	"""
-	What this does
+	This function DOES STUFF! :D
 	"""
-	print("We'll get back to you on that...")
+	try:
+		fd = open(filename, "rb")
+		b = fd.read()
+		if b:
+			print(b)
+
+		#
+		#risky code
+		#
+
+	except:
+		print("Error", sys.exc_info()[0])
+		sys.exit()
 
 def usage():
 	"""
@@ -21,15 +33,14 @@ def main():
 	"""
 	if len(sys.argv) == 2:
 		filename = sys.argv[1]
-		print(filename)
+		dostuff(filename)
 	else:
 		usage()
-	# print("Hello world!")
-	# a = 3
-	# if(a>4):
-	# 	print("foo")
-	# else:
-	# 	print("bar")
+
+
+
+
+
 
 
 
