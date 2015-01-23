@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import sys
+import argparse
+parser = argparser.ArgumentParser()
 
 def dostuff():
 	"""
@@ -10,20 +11,16 @@ def dostuff():
 
 def usage():
 	"""
-	Catches error when arguments are not valid
+	What this does
 	"""
 	print("Error: /n")
 	print("Usage: hw1.py filename")
 
 def main():	
 	"""
-	Reads in filename argument.
+	What this does
 	"""
-	if len(sys.argv) == 2:
-		filename = sys.argv[1]
-		print(filename)
-	else:
-		usage()
+
 	# print("Hello world!")
 	# a = 3
 	# if(a>4):
