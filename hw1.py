@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-#This program adds one space between the columns/hex values
+#This program adds one space between the columns and hex-byte values
 
 import sys
 import math
@@ -15,7 +15,7 @@ def printASCII(bytes):
 				#ASCII value of byte
 				print(chr(b), end = "")
 			else:
-				print(".")
+				print(".", end = "")
 
 	except:
 		print("Error", sys.exc_info()[0])
