@@ -12,6 +12,7 @@ class asciiDump:
 		self.filename = filename
 		self.fd = self.open_file()
 
+
 	def open_file(self):
 	    """ 
 	    Author: Brian Levine
@@ -34,8 +35,6 @@ class asciiDump:
 		"""
 		count = 0
 		word = ""
-		oldWord = False
-
 
 		try:
 			data = self.fd.read(16)
@@ -44,24 +43,46 @@ class asciiDump:
 			sys.exit()
 		while data:
 			for d in data:
-				#if printable or new line
-				if d > 31 and d < 127 or d == 10:
-					count+= 1
+				#while we aren't long enough to be a word
+				while(count < wordlength):
+					#if printable or new line
+					if d > 31 and d < 127 or d == 10:
+						word += chr(d)
+						if d != 10:
+							count +=
+						#if new line, this kills the premature word
+						else:
+							count = 0
+							word  = ""
+				#if printable
+				if d > 31 and d < 127:
 					word += chr(d)
-				#if reached minimum word length
-				if (count >= wordlength):
-					#and haven't already printed out the word
-					if(oldWord == False):
+					count +=
+				else:
+					if d == 10:
+						word += chr(d)
 						print(word)
-						oldWord = True
+						count = 0
+						word = ""
 					else:
-						#print next letter in the word
-						print (chr(d))
-				#if not printable or new line
-				if d < 31 and d > 127 and d != 10:
-					count = 0
-					word = ""
-					oldWord = False
+						print(word)
+						count = 0
+						word = ""
+
+				# #if reached minimum word length
+				# if (count >= wordlength):
+				# 	#and haven't already printed out the word
+				# 	if(oldWord == False):
+				# 		print(word)
+				# 		oldWord = True
+				# 	else:
+				# 		#print next letter in the word
+				# 		print (chr(d))
+				# #if not printable or new line
+				# if d < 31 and d > 127 and d != 10:
+				# 	count = 0
+				# 	word = ""
+				# 	oldWord = False
 			try:
 				data = self.fd.read(16)
 			except:
