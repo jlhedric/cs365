@@ -30,18 +30,38 @@ class asciiDump:
 
 	def ascii_dump(self):
 		"""
-		Do things
+		Does things
 		"""
+		count = 0
+		word = ""
+		oldWord = False
+
+
 		try:
 			data = self.fd.read(16)
 		except:
 			print("Unexpected error while reading file:", sys.exc_info()[0])
 			sys.exit()
 		while data:
-			#do stuff
 			for d in data:
-				#do stuff
-
+				#if printable or new line
+				if d > 31 and d < 127 or d == 10:
+					count+= 1
+					word += chr(d)
+				#if reached minimum word length
+				if (count >= wordlength):
+					#and haven't already printed out the word
+					if(oldWord == False):
+						print(word)
+						oldWord = True
+					else:
+						#print next letter in the word
+						print (chr(d))
+				#if not printable or new line
+				if d < 31 and d > 127 and d != 10:
+					count = 0
+					word = ""
+					oldWord = False
 			try:
 				data = self.fd.read(16)
 			except:
@@ -64,10 +84,11 @@ def main():
 		try:
 			wordlength   = int(sys.argv[1])
 			filename = sys.argv[2]
-			file = asciiDump(wordlength, filename)
 		except:
 			print("Unexpected error while reading arguments:", sys.exc_info()[0])
 			sys.exit()
+		file = asciiDump(wordlength, filename)
+		file.ascii_dump()
 	else:
 		usage()
 
