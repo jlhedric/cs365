@@ -43,52 +43,39 @@ class asciiDump:
 			sys.exit()
 		while data:
 			for d in data:
-				#while we aren't long enough to be a word
-				while(count < wordlength):
+				#while not long enough to be a word
+				if(count < self.wordlength):
 					#if printable or new line
-					if d > 31 and d < 127 or d == 10:
+					if ((d > 31 and d < 127) or (d == 10)):
 						word += chr(d)
 						if d != 10:
-							count +=
+							count += 1
 						#if new line, this kills the premature word
 						else:
 							count = 0
 							word  = ""
-				#if printable
-				if d > 31 and d < 127:
+					else:
+						count = 0
+						word = ""
+				#if printable and a whole word
+				elif (d > 31 and d < 127):
 					word += chr(d)
-					count +=
+					count += 1
 				else:
 					if d == 10:
 						word += chr(d)
-						print(word)
+						print(word, end = "")
 						count = 0
 						word = ""
 					else:
 						print(word)
 						count = 0
 						word = ""
-
-				# #if reached minimum word length
-				# if (count >= wordlength):
-				# 	#and haven't already printed out the word
-				# 	if(oldWord == False):
-				# 		print(word)
-				# 		oldWord = True
-				# 	else:
-				# 		#print next letter in the word
-				# 		print (chr(d))
-				# #if not printable or new line
-				# if d < 31 and d > 127 and d != 10:
-				# 	count = 0
-				# 	word = ""
-				# 	oldWord = False
 			try:
 				data = self.fd.read(16)
 			except:
 				print("Unexpected error while reading file:", sys.exc_info()[0])
 				sys.exit()
-
 
 def usage():
 	"""
