@@ -5,13 +5,12 @@ HW2 CS365 Forensics, Spring 2015
 """
 import sys
 
-class asciiDump:
+class wordDump:
 
-	def __init__(self, wordlength, filename):
-		self.wordlength = wordlength
+	def __init__(self, minLength, filename):
+		self.minLength = minLength
 		self.filename = filename
 		self.fd = self.open_file()
-
 
 	def open_file(self):
 	    """ 
@@ -29,12 +28,14 @@ class asciiDump:
 	      print("Unexpected error:", sys.exc_info()[0])
 	      usage()
 
-	def ascii_dump(self):
+	def word_dump(self):
 		"""
-		Prints the ascii with the minimum word length or higher
+		Prints the ascii/unicode with the minimum word length or higher
 		"""
-		count = 0
+		currLength = 0
 		word = ""
+		#this will be used to keep track of the previous byte
+		lastPrintable = False
 
 		try:
 			data = self.fd.read(16)
@@ -44,33 +45,66 @@ class asciiDump:
 		while data:
 			for d in data:
 				#while not long enough to be a word
-				if(count < self.wordlength):
+				if(currLength < self.minLength):
 					#if printable or new line
 					if ((d > 31 and d < 127) or (d == 10)):
 						word += chr(d)
 						if d != 10:
-							count += 1
+							lastPrintable = True
+							currLength += 1
 						#if new line, this kills the premature word
 						else:
-							count = 0
+							lastPrintable = False
+							currLength = 0
 							word  = ""
+					#if we encounter a null character
+					elif (d == 0):
+						#if consecutive unprintable character
+						if(lastPrintable == False):
+							#then this is not a unicode byte pair
+							#premature word dies
+							currLength = 0
+							word  = ""
+						#else it might be part of unicode byte pair
+						else:
+							lastPrintable = False
+					#else unprintable, kills premature word
 					else:
-						count = 0
-						word = ""
+						lastPrintable = False
+						currLength = 0
+						word  = ""
 				#if printable and a whole word
 				elif (d > 31 and d < 127):
+					lastPrintable = True
 					word += chr(d)
-					count += 1
-				#if new line and a whole word already
+					currLength += 1
+				#if something else and a whole word
 				else:
+					#if new line, print word and reset values
 					if d == 10:
+						lastPrintable = False
 						word += chr(d)
-						print(word, end = "")
-						count = 0
-						word = ""
-					else:
 						print(word)
-						count = 0
+						currLength = 0
+						word = ""
+					#if null value
+					elif d == 0:
+						#if consecutive unprintable character
+						if(lastPrintable == False):
+							#then this is not a unicode byte pair
+							#print word and reset values
+							lastPrintable = False
+							print(word)
+							currLength = 0
+							word = ""
+						#else it might be part of unicode byte pair
+						else:
+							lastPrintable = False
+					#if unprintable, print word and reset values
+					else:
+						lastPrintable = False
+						print(word)
+						currLength = 0
 						word = ""
 			try:
 				data = self.fd.read(16)
@@ -91,13 +125,13 @@ def main():
 	"""
 	if len(sys.argv) == 3:
 		try:
-			wordlength   = int(sys.argv[1])
+			minLength   = int(sys.argv[1])
 			filename = sys.argv[2]
 		except:
 			print("Unexpected error while reading arguments:", sys.exc_info()[0])
 			sys.exit()
-		file = asciiDump(wordlength, filename)
-		file.ascii_dump()
+		file = wordDump(minLength, filename)
+		file.word_dump()
 	else:
 		usage()
 
