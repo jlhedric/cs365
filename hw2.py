@@ -31,7 +31,7 @@ class asciiDump:
 
 	def ascii_dump(self):
 		"""
-		Does things
+		Prints the ascii with the minimum word length or higher
 		"""
 		count = 0
 		word = ""
@@ -61,6 +61,7 @@ class asciiDump:
 				elif (d > 31 and d < 127):
 					word += chr(d)
 					count += 1
+				#if new line and a whole word already
 				else:
 					if d == 10:
 						word += chr(d)
