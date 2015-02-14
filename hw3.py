@@ -6,16 +6,21 @@ HW2 CS365 Forensics, Spring 2015
 import sys
 import string
 import os
+import binascii
+from struct import unpack
 
 JPEG_HEADER = b'\xff\xd8' 
-JPEG_FOOTER = b'\xff\xd9'
-filesize = 0
 
 class exifDump:
 
 	def __init__(self, filename):
 		self.filename = filename
 		self.fd = self.open_file()
+		self.filesize = os.path.getsize(self.filename)
+		self.offset = 2
+		self.marker_location = b'\x00\x00'
+		self.marker_value 	 = b'\x00\x00'
+		self.marker_length 	 = b'\x00\x00'
 
 	def open_file(self):
 	    """ 
@@ -24,6 +29,7 @@ class exifDump:
 	    Returns:
 	      an open file descriptor
 	    """
+
 	    try:
 	      return(open(self.filename, "rb"))
 	    except IOError as err:
@@ -33,23 +39,38 @@ class exifDump:
 	      print("Unexpected error:", sys.exc_info()[0])
 	      usage()
 
-	def foo(self):
+	def check_jpeg(self):
 		"""
-		TBD
+		Checks that the file is a JPEG. If it isn't, exits. 
+		Else, continues to find markers.
 		"""
-		filesize = os.path.getsize(self.filename)
-		offset = 0
-		print(filesize)
 		try:
 			data = self.fd.read(2)
 		except:
 			print("Unexpected error while reading file:", sys.exc_info()[0])
 			sys.exit()
+		#if not JPEG	
 		if(data != JPEG_HEADER):
 			print("Warning: File is not a JPEG. Program will now exit.")
 			sys.exit()
 		else:
-			print("Hello JPEG.")
+			self.find_markers()
+
+	def find_markers(self):
+		"""
+		TBD
+		"""
+		#while self.marker_value != b'\xFF\xDA':
+		self.marker_location = self.fd.tell()
+		self.marker_value = unpack(">%dh" % self.fd.read(self.offset))[0]
+		self.marker_length = unpack(">%dh" % self.fd.read(self.offset))[0]
+		print("0x%04X" % self.marker_location)
+		print(self.marker_value)
+		print(self.marker_length)
+
+
+
+
 		
 
 def usage():
@@ -71,7 +92,7 @@ def main():
 			sys.exit()
 		#make call to main class
 		file = exifDump(filename)
-		file.foo()
+		file.check_jpeg()
 	else:
 		usage()
 
