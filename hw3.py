@@ -6,7 +6,6 @@ HW2 CS365 Forensics, Spring 2015
 import sys
 import string
 import os
-import binascii
 from struct import unpack
 
 JPEG_HEADER = b'\xff\xd8' 
@@ -18,9 +17,9 @@ class exifDump:
 		self.fd = self.open_file()
 		self.filesize = os.path.getsize(self.filename)
 		self.offset = 2
-		self.marker_location = b'\x00\x00'
-		self.marker_value 	 = b'\x00\x00'
-		self.marker_length 	 = b'\x00\x00'
+		self.marker_location = 0
+		self.marker_value 	 = 0
+		self.marker_length 	 = 0
 
 	def open_file(self):
 	    """ 
@@ -58,20 +57,19 @@ class exifDump:
 
 	def find_markers(self):
 		"""
-		TBD
+		Cycles through the metadata of the JPEG and prints out the various 
+		marker values. Stops when it encounters the FFDA tag, which signifies
+		the beginning of file data.
 		"""
-		#while self.marker_value != b'\xFF\xDA':
-		self.marker_location = self.fd.tell()
-		self.marker_value = unpack(">%dh" % self.fd.read(self.offset))[0]
-		self.marker_length = unpack(">%dh" % self.fd.read(self.offset))[0]
-		print("0x%04X" % self.marker_location)
-		print(self.marker_value)
-		print(self.marker_length)
-
-
-
-
-		
+		while self.marker_value != int.from_bytes(b'\xFF\xDA', byteorder='big'):
+			self.marker_location = self.fd.tell()
+			self.marker_value = unpack(">H", self.fd.read(2))[0]
+			self.marker_length = unpack(">H", self.fd.read(2))[0]
+			self.offset = self.marker_location + 2 + self.marker_length
+			self.fd.seek(self.offset)
+			print("[0x%04X]" % self.marker_location, end = " ")
+			print("Marker 0x%04X" % self.marker_value, end = " ")
+			print("size=0x%04X" % self.marker_length)
 
 def usage():
 	"""
