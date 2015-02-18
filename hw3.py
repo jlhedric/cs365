@@ -57,21 +57,50 @@ class exifDump:
 
 	def find_markers(self):
 		"""
-		Cycles through the metadata of the JPEG and prints out the various 
-		marker values. Stops when it encounters the FFDA tag, which signifies
-		the beginning of file data.
+		Cycles through the metadata of the JPEG. Makes call to check_exif_and_endian()
+		for each marker. 
 		"""
 		while self.marker_value != int.from_bytes(b'\xFF\xDA', byteorder='big'):
 			self.marker_location = self.fd.tell()
 			self.marker_value = unpack(">H", self.fd.read(2))[0]
 			self.marker_length = unpack(">H", self.fd.read(2))[0]
-			if(self.fd.read(self.marker_length - 2) == b'Exif\x00\x00MM\x00\x2a'):
-				print("Look Ma, a Big Endian Exif file.")
-			self.offset = self.marker_location + 2 + self.marker_length
-			self.fd.seek(self.offset)
 			print("[0x%04X]" % self.marker_location, end = " ")
 			print("Marker 0x%04X" % self.marker_value, end = " ")
 			print("size=0x%04X" % self.marker_length)
+			self.check_exif_and_endian()
+			self.offset = self.marker_location + 2 + self.marker_length
+			self.fd.seek(self.offset)
+
+
+	def check_exif_and_endian(self):
+		"""
+		Reads in first 6 bytes of marker headers. If exif, checks next 2 bytes for 
+		endianness. If the header is not exif, continue find_markers(). If big 
+		endian, make call to get_IFD()
+		"""		
+		data = self.fd.read(6)
+		#if exif
+		if(data == b'Exif\x00\x00'):
+			#if big endian
+			if(self.fd.read(2) == b'MM'):
+				#skip over 00 2a
+				self.fd.read(2)
+				self.get_IFD()
+			else:
+				sys.exit()
+
+	def get_IFD(self):
+		"""
+		Prints number of IFD entries.
+		"""
+		self.offset = unpack(">L", self.fd.read(4))[0]
+		self.fd.read(self.offset - 8)
+		print("Number of IFD Entries: ", unpack(">H", self.fd.read(2))[0])
+
+		
+			
+		
+			
 
 def usage():
 	"""
