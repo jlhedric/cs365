@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Author: Jade Hedrick
-HW2 CS365 Forensics, Spring 2015
+HW3 CS365 Forensics, Spring 2015
 """
 import sys
 import string
@@ -70,7 +70,6 @@ class exifDump:
 			self.check_exif_and_endian()
 			self.offset = self.marker_location + 2 + self.marker_length
 			self.fd.seek(self.offset)
-
 
 	def check_exif_and_endian(self):
 		"""
