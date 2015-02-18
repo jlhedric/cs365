@@ -4,8 +4,6 @@ Author: Jade Hedrick
 HW3 CS365 Forensics, Spring 2015
 """
 import sys
-#import string
-#import os
 from tags import TAGS
 from struct import unpack
 
@@ -17,13 +15,13 @@ class exifDump:
 	def __init__(self, filename):
 		self.filename = filename
 		self.fd = self.open_file()
-		#self.filesize = os.path.getsize(self.filename)
 		self.offset = 2
 		self.endian_offset   = 0
 		self.marker_location = 0
 		self.marker_value 	 = 0
 		self.marker_length 	 = 0
 
+	#part 1
 	def open_file(self):
 	    """ 
 	    Author: Brian Levine
@@ -41,6 +39,7 @@ class exifDump:
 	      print("Unexpected error:", sys.exc_info()[0])
 	      usage()
 
+	 #part 2
 	def check_jpeg(self):
 		"""
 		Checks that the file is a JPEG. If it isn't, exits. 
@@ -96,16 +95,14 @@ class exifDump:
 				self.fd.read(2)
 				self.get_IFD()
 			else:
+				print("Get back little endian scum! Program will exit for such insolence!")
 				sys.exit()
-	
-				
 
 	def get_IFD(self):
 		"""
-		Prints number of IFD entries.
+		Prints number of IFD entries. Parses IFD tags and prints them out.
 		"""
 		bytes_per_component = (0,1,1,2,4,8,1,1,2,4,8,4,8)
-		width = 35
 		try:
 			self.offset = unpack(">L", self.fd.read(4))[0]
 			self.fd.read(self.offset - 8)
@@ -120,42 +117,22 @@ class exifDump:
 			print(TAGS[tag], end = " ")
 			format = unpack(">H", self.fd.read(2))[0]
 			num_of_components = unpack(">L", self.fd.read(4))[0]
-			data_length = bytes_per_component[format]*num_of_components
-			if(data_length <= 4):
-				entry_data = unpack(">H", self.fd.read(2))[0]
-
-
-
-
-
-			entry_data = unpack(">L", self.fd.read(4))[0]
-			
-			#save where we were
-			next_tag = self.fd.tell()
-			#if tiny data
-			if(data_length <= 4):
-				print(entry_data)
+			length = bytes_per_component[format]*num_of_components
+			if(length <= 4):
+				#WRONG
+				data = unpack(">L", self.fd.read(4))[0]
+				print(data)
+				#WRONG
 			else:
+				data = unpack(">L", self.fd.read(4))[0]
+				next_tag = self.fd.tell()
 				#move back to 0x4d
 				self.fd.seek(self.endian_offset)
 				#read up to the data offset
-				self.fd.read(entry_data)
-				print(self.fd.read(data_length).decode("utf-8").rjust(width))
+				self.fd.read(data)
+				print(self.fd.read(length).decode("utf-8").rjust(35))
 				#go to the next tag
 				self.fd.seek(next_tag)
-
-
-
-			
-
-
-
-
-
-		
-			
-		
-			
 
 def usage():
 	"""
