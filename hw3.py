@@ -65,6 +65,8 @@ class exifDump:
 			self.marker_location = self.fd.tell()
 			self.marker_value = unpack(">H", self.fd.read(2))[0]
 			self.marker_length = unpack(">H", self.fd.read(2))[0]
+			if(self.fd.read(self.marker_length - 2) == b'Exif\x00\x00MM\x00\x2a'):
+				print("Look Ma, a Big Endian Exif file.")
 			self.offset = self.marker_location + 2 + self.marker_length
 			self.fd.seek(self.offset)
 			print("[0x%04X]" % self.marker_location, end = " ")
