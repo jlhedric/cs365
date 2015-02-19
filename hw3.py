@@ -138,48 +138,86 @@ class exifDump:
 				# #go to the next tag
 				# self.fd.seek(next_tag)
 
+	#the part where it stops looking pretty
 	def format(self, format, num_of_components, length):
 		format = format
 		length = length
-		numerator   = 1
-		denominator = 1
+		numerator   = 1.0
+		denominator = 1.0
 		if(format == 1):
 			if(length <= 4):
 				data = unpack(">B", self.fd.read(1))[0]
 				print(data)
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				data = unpack(">B", self.fd.read(1))[0]
+				print(data)
 		elif(format == 2):
 			if(length <= 4):
 				data = bytes.decode(self.fd.read(1))
 				print(data)
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				data = bytes.decode(self.fd.read(length))
+				print(data)
 		elif(format == 3):
 			if(length <= 4):
 				data = unpack(">%dH" % num_of_components, self.fd.read(length))[0]
 				print(data)
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				data = unpack(">%dH" % num_of_components, self.fd.read(length))[0]
+				print(data)
 		elif(format == 4):
 			if(length <= 4):
 				data = unpack(">L", self.fd.read(4))[0]
 				print(data)
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				data = unpack(">L", self.fd.read(4))[0]
+				print(data)
 		elif(format == 5):
 			if(length <= 4):
 				(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
 				print("%s/%s" % (numerator, denominator))
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
+				print("%s/%s" % (numerator, denominator))
 		elif(format == 7):
 			if(length <= 4):
 				value = unpack(">%dB" % length, self.fd.read(length))[0]
 				data = "".join("%c" % x for x in value)
 				print(data)
 			else:
-				print("yay")
+				data_offset = unpack(">L", self.fd.read(4))[0]
+				#move back to 0x4d
+				self.fd.seek(self.endian_offset)
+				#read up to the data offset
+				self.fd.read(data_offset)
+				value = unpack(">%dB" % length, self.fd.read(length))[0]
+				data = "".join("%c" % x for x in value)
+				print(data)
 
 def usage():
 	"""
