@@ -16,12 +16,8 @@ class exifDump:
 		self.filename = filename
 		self.fd = self.open_file()
 		self.offset = 2
-		self.endian_offset   = 0
-		self.marker_location = 0
-		self.marker_value 	 = 0
-		self.marker_length 	 = 0
+		self.endian_offset = 0
 
-	#part 1
 	def open_file(self):
 	    """ 
 	    Author: Brian Levine
@@ -39,7 +35,6 @@ class exifDump:
 	      print("Unexpected error:", sys.exc_info()[0])
 	      usage()
 
-	 #part 2
 	def check_jpeg(self):
 		"""
 		Checks that the file is a JPEG. If it isn't, exits. 
@@ -62,19 +57,22 @@ class exifDump:
 		Cycles through the metadata of the JPEG. Makes call to check_exif_and_endian()
 		for each marker. 
 		"""
+		marker_value = 0
+		marker_location = 0
+		marker_length = 0
 		#run until FFDA marker
-		while self.marker_value != int.from_bytes(b'\xFF\xDA', byteorder='big'):
-			self.marker_location = self.fd.tell()
+		while marker_value != int.from_bytes(b'\xFF\xDA', byteorder='big'):
+			marker_location = self.fd.tell()
 			try:
-				self.marker_value = unpack(">H", self.fd.read(2))[0]
-				self.marker_length = unpack(">H", self.fd.read(2))[0]
+				marker_value = unpack(">H", self.fd.read(2))[0]
+				marker_length = unpack(">H", self.fd.read(2))[0]
 			except:
 				print("Unexpected error while reading markers:", sys.exc_info()[0])
-			print("[0x%04X]" % self.marker_location, end = " ")
-			print("Marker 0x%04X" % self.marker_value, end = " ")
-			print("size=0x%04X" % self.marker_length)
+			print("[0x%04X]" % marker_location, end = " ")
+			print("Marker 0x%04X" % marker_value, end = " ")
+			print("size=0x%04X" % marker_length)
 			self.check_exif_and_endian()
-			self.offset = self.marker_location + 2 + self.marker_length
+			self.offset = marker_location + 2 + marker_length
 			self.fd.seek(self.offset)
 
 	def check_exif_and_endian(self):
@@ -100,7 +98,7 @@ class exifDump:
 
 	def get_IFD(self):
 		"""
-		Prints number of IFD entries. Parses IFD tags and prints them out.
+		Prints number of IFD entries. Parses IFD tags with call to format().
 		"""
 		bytes_per_component = (0,1,1,2,4,8,1,1,2,4,8,4,8)
 		try:
@@ -111,28 +109,77 @@ class exifDump:
 		except:
 			print("Unexpected read error while fetching number of IFD entries:", sys.exc_info()[0])
 		#for num_entries
-		for num in range(1, num_entries+1):
+		for num in range(0, num_entries):
+			#at this point we are at the beginning of an entry
+			#here we save an index pointing to the next entry 12 bytes away
+			next_tag = self.fd.tell() + 12
 			tag = unpack(">H", self.fd.read(2))[0]
 			print("%X" % tag, end = " ")
 			print(TAGS[tag], end = " ")
 			format = unpack(">H", self.fd.read(2))[0]
 			num_of_components = unpack(">L", self.fd.read(4))[0]
 			length = bytes_per_component[format]*num_of_components
+			self.format(format, num_of_components, length)
+			#no matter where we got to in format(), we only jump 12 bytes from the start of the loop
+			self.fd.seek(next_tag)
+			# if(length <= 4):
+			# 	#WRONG
+			# 	data = unpack(">L", self.fd.read(4))[0]
+			# 	print(data)
+			# 	#WRONG
+			# else:
+			# 	data = unpack(">L", self.fd.read(4))[0]
+			# 	next_tag = self.fd.tell()
+				#move back to 0x4d
+				# self.fd.seek(self.endian_offset)
+				# #read up to the data offset
+				# self.fd.read(data)
+				# print(self.fd.read(length).decode("utf-8").rjust(35))
+				# #go to the next tag
+				# self.fd.seek(next_tag)
+
+	def format(self, format, num_of_components, length):
+		format = format
+		length = length
+		numerator   = 1
+		denominator = 1
+		if(format == 1):
 			if(length <= 4):
-				#WRONG
+				data = unpack(">B", self.fd.read(1))[0]
+				print(data)
+			else:
+				print("yay")
+		elif(format == 2):
+			if(length <= 4):
+				data = bytes.decode(self.fd.read(1))
+				print(data)
+			else:
+				print("yay")
+		elif(format == 3):
+			if(length <= 4):
+				data = unpack(">%dH" % num_of_components, self.fd.read(length))[0]
+				print(data)
+			else:
+				print("yay")
+		elif(format == 4):
+			if(length <= 4):
 				data = unpack(">L", self.fd.read(4))[0]
 				print(data)
-				#WRONG
 			else:
-				data = unpack(">L", self.fd.read(4))[0]
-				next_tag = self.fd.tell()
-				#move back to 0x4d
-				self.fd.seek(self.endian_offset)
-				#read up to the data offset
-				self.fd.read(data)
-				print(self.fd.read(length).decode("utf-8").rjust(35))
-				#go to the next tag
-				self.fd.seek(next_tag)
+				print("yay")
+		elif(format == 5):
+			if(length <= 4):
+				(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
+				print("%s/%s" % (numerator, denominator))
+			else:
+				print("yay")
+		elif(format == 7):
+			if(length <= 4):
+				value = unpack(">%dB" % length, self.fd.read(length))[0]
+				data = "".join("%c" % x for x in value)
+				print(data)
+			else:
+				print("yay")
 
 def usage():
 	"""
