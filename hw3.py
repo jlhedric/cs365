@@ -142,8 +142,8 @@ class exifDump:
 	def format(self, format, num_of_components, length):
 		format = format
 		length = length
-		numerator   = 1.0
-		denominator = 1.0
+		numerator   = 1
+		denominator = 1
 		if(format == 1):
 			if(length <= 4):
 				data = unpack(">B", self.fd.read(1))[0]
@@ -192,9 +192,13 @@ class exifDump:
 				self.fd.read(data_offset)
 				data = unpack(">L", self.fd.read(4))[0]
 				print(data)
+		#
+		#WRONG
+		#
 		elif(format == 5):
 			if(length <= 4):
-				(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
+				#will not compile with the following line of code:
+				#(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
 				print("%s/%s" % (numerator, denominator))
 			else:
 				data_offset = unpack(">L", self.fd.read(4))[0]
@@ -202,8 +206,13 @@ class exifDump:
 				self.fd.seek(self.endian_offset)
 				#read up to the data offset
 				self.fd.read(data_offset)
-				(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
+				#will not compile with the following line of code:
+				#(numerator, denominator) = unpack(">LL", self.fd.read(8))[0]
 				print("%s/%s" % (numerator, denominator))
+		#
+		#WRONG
+		#
+
 		elif(format == 7):
 			if(length <= 4):
 				value = unpack(">%dB" % length, self.fd.read(length))[0]
