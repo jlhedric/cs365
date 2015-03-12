@@ -12,14 +12,30 @@ class fsttat:
 	def __init__(self, offset, image_name):
 		self.image_name = image_name
 		self.offset = offset
+		self.fd = self.open_file()
+		
+	def open_file(self):
+	    """ 
+	    Author: Brian Levine
+	    Opens filename, and calls usage() on error.
+	    Returns:
+	      an open file descriptor
+	    """
 
+	    try:
+	      return(open(self.image_name, "rb"))
+	    except IOError as err:
+	      print("IOError opening file: \n\t%s" % err)
+	      usage()
+	    except:
+	      print("Unexpected error:", sys.exc_info()[0])
+	      usage()
 
 	def foo(self):
 		"""
 		testing
 		"""
-		print(self.offset)
-		print(self.image_name)
+		
 
 
 
