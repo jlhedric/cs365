@@ -7,6 +7,7 @@ import sys
 import math
 from struct import unpack
 
+FAT16_ENTRY_SIZE = 32
 
 class fsttat:
 
@@ -32,17 +33,17 @@ class fsttat:
 	      print("Unexpected error:", sys.exc_info()[0])
 	      usage()
 
-	def foo(self):
+	def boot_parser(self):
 		"""
-		testing
+		Reads the contents of a FAT16 boot sector and prints them out.
+		This is the ugliest code I have ever written. :D
 		"""
-		label_length = 11
 		try:
 			self.fd.read(3) #skip bytes 0-2
-			OEM_name = bytes.decode(self.fd.read(8)) #unpack("<LL", self.fd.read(8))[0] 
+			OEM_name = bytes.decode(self.fd.read(8)) 
 			sec_size = unpack("<H", self.fd.read(2))[0]
 			sec_per_clust = unpack("<B", self.fd.read(1))[0]
-			reserved_size = unpack("<H", self.fd.read(2))[0]
+			reserved_size = unpack("<H", self.fd.read(2))[0] - 1 #to account for the 0 start
 			num_FATS = unpack("<B", self.fd.read(1))[0]
 			max_root_files = unpack("<H", self.fd.read(2))[0]
 			num_secs = unpack("<H", self.fd.read(2))[0] - 1  #to account for the 0 start
@@ -52,24 +53,29 @@ class fsttat:
 			before_part = unpack("<L", self.fd.read(4))[0]
 			self.fd.read(7) #skip bytes 32-38
 			volume_ID = unpack("<L", self.fd.read(4))[0]
-			volume_label = bytes.decode(self.fd.read(11)) #unpack("<%dB" % label_length, self.fd.read(label_length))[0]
+			volume_label = bytes.decode(self.fd.read(11)) 
 			file_type_label = bytes.decode(self.fd.read(8))
 		except:
 			print("Unexpected error while reading boot sector:", sys.exc_info()[0])
 			sys.exit()
 
-		FAT0_start = reserved_size
-		FAT0_end = reserved_size+FAT_size-1
+		root_size = max_root_files*FAT16_ENTRY_SIZE / sec_size - 1 #to account for 0
+		FAT0_start = reserved_size+1
+		FAT0_end = reserved_size+FAT_size
 		FAT1_start = FAT0_end+1
 		FAT1_end = FAT0_end+FAT_size
-		root_end = 87
+		root_start = FAT1_end+1
+		root_end = root_start+root_size
 		cluster_size = sec_per_clust*sec_size
 		cluster_num = math.floor(num_secs/sec_per_clust)
 		cluster_area_start = root_end+1
 		cluster_area_end = cluster_num*sec_per_clust-1
+		if(cluster_area_end != num_secs):	#if there is slack space
+			noncluster_start = cluster_area_end +1
+		else:								#otherwise
+			noncluster_start = num_secs
 		cluster_range_end = (num_secs-(cluster_area_start-2)) /2
-
-
+		
 		print("FILE SYSTEM INFORMATION\n--------------------------------------------")
 		print("File System Type: ", end = "")
 		print(file_type_label)
@@ -87,7 +93,7 @@ class fsttat:
 		print("Total Range in Image: ", end = "")
 		print("%d - %d" % (0, cluster_area_end))
 		print("* Reserved:  ", end = "")
-		print("%d - %d" % (0, reserved_size-1))
+		print("%d - %d" % (0, reserved_size))
 		print("** Boot Sector: ", end = "")
 		print(0)
 		print("* FAT 0: ", end = "")
@@ -95,13 +101,13 @@ class fsttat:
 		print("* FAT 1: ", end = "")
 		print("%d - %d" % (FAT1_start, FAT1_end))
 		print("Data Area: ", end = "")
-		print("%d - %d" % (FAT1_end+1, num_secs))
+		print("%d - %d" % (root_start, num_secs))
 		print("** Root Directory: ", end = "")
-		print("%d - %d" % (FAT1_end+1, 10000000))
+		print("%d - %d" % (root_start, root_end))
 		print("Cluster Area: ", end = "")
-		print("%d - %d" % (10000000, cluster_area_end))
+		print("%d - %d" % (root_end+1, cluster_area_end))
 		print("Non-clustered: ", end = "")
-		print("%d - %d" % (cluster_area_end+1, num_secs))
+		print("%d - %d" % (noncluster_start, num_secs))
 		print("\nCONTENT INFORMATION\n--------------------------------------------")
 		print("Sector Size: ", end = "")
 		print("%d bytes" % sec_size)
@@ -109,8 +115,6 @@ class fsttat:
 		print("%d bytes" % cluster_size)
 		print("Total Cluster Range: ", end = "")
 		print("%d - %d" % (2, cluster_range_end))
-
-
 
 def usage():
 	"""
@@ -132,7 +136,7 @@ def main():
 			sys.exit()
 		#make call to main class
 		file = fsttat(offset, image_name)
-		file.foo()
+		file.boot_parser()
 	else:
 		usage()
 
