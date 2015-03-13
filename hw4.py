@@ -4,6 +4,7 @@ Author: Jade Hedrick
 HW4 CS365 Forensics, Spring 2015
 """
 import sys
+import math
 from struct import unpack
 
 
@@ -35,7 +36,79 @@ class fsttat:
 		"""
 		testing
 		"""
-		
+		label_length = 11
+		try:
+			self.fd.read(3) #skip bytes 0-2
+			OEM_name = bytes.decode(self.fd.read(8)) #unpack("<LL", self.fd.read(8))[0] 
+			sec_size = unpack("<H", self.fd.read(2))[0]
+			sec_per_clust = unpack("<B", self.fd.read(1))[0]
+			reserved_size = unpack("<H", self.fd.read(2))[0]
+			num_FATS = unpack("<B", self.fd.read(1))[0]
+			max_root_files = unpack("<H", self.fd.read(2))[0]
+			num_secs = unpack("<H", self.fd.read(2))[0] - 1  #to account for the 0 start
+			self.fd.read(1) #skip byte 21
+			FAT_size = unpack("<H", self.fd.read(2))[0]
+			self.fd.read(4) #skip bytes 24-27
+			before_part = unpack("<L", self.fd.read(4))[0]
+			self.fd.read(7) #skip bytes 32-38
+			volume_ID = unpack("<L", self.fd.read(4))[0]
+			volume_label = bytes.decode(self.fd.read(11)) #unpack("<%dB" % label_length, self.fd.read(label_length))[0]
+			file_type_label = bytes.decode(self.fd.read(8))
+		except:
+			print("Unexpected error while reading boot sector:", sys.exc_info()[0])
+			sys.exit()
+
+		FAT0_start = reserved_size
+		FAT0_end = reserved_size+FAT_size-1
+		FAT1_start = FAT0_end+1
+		FAT1_end = FAT0_end+FAT_size
+		root_end = 87
+		cluster_size = sec_per_clust*sec_size
+		cluster_num = math.floor(num_secs/sec_per_clust)
+		cluster_area_start = root_end+1
+		cluster_area_end = cluster_num*sec_per_clust-1
+		cluster_range_end = (num_secs-(cluster_area_start-2)) /2
+
+
+		print("FILE SYSTEM INFORMATION\n--------------------------------------------")
+		print("File System Type: ", end = "")
+		print(file_type_label)
+		print("\nOEM Name: ", end = "")
+		print(OEM_name)
+		print("Volume ID: ", end = "")
+		print("0x%08x" % volume_ID)
+		print("Volume Label (Boot Sector): ", end = "")
+		print(volume_label)
+		print("\nFile System Type Label: ", end = "")
+		print(file_type_label)
+		print("\nFile System Layout (in sectors) ")
+		print("Total Range: ", end = "")
+		print("%d - %d" % (0, num_secs))
+		print("Total Range in Image: ", end = "")
+		print("%d - %d" % (0, cluster_area_end))
+		print("* Reserved:  ", end = "")
+		print("%d - %d" % (0, reserved_size-1))
+		print("** Boot Sector: ", end = "")
+		print(0)
+		print("* FAT 0: ", end = "")
+		print("%d - %d" % (FAT0_start, FAT0_end))
+		print("* FAT 1: ", end = "")
+		print("%d - %d" % (FAT1_start, FAT1_end))
+		print("Data Area: ", end = "")
+		print("%d - %d" % (FAT1_end+1, num_secs))
+		print("** Root Directory: ", end = "")
+		print("%d - %d" % (FAT1_end+1, 10000000))
+		print("Cluster Area: ", end = "")
+		print("%d - %d" % (10000000, cluster_area_end))
+		print("Non-clustered: ", end = "")
+		print("%d - %d" % (cluster_area_end+1, num_secs))
+		print("\nCONTENT INFORMATION\n--------------------------------------------")
+		print("Sector Size: ", end = "")
+		print("%d bytes" % sec_size)
+		print("Cluster Size: ", end = "")
+		print("%d bytes" % cluster_size)
+		print("Total Cluster Range: ", end = "")
+		print("%d - %d" % (2, cluster_range_end))
 
 
 
