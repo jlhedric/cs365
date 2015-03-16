@@ -36,20 +36,27 @@ class istat:
 	def find_MFT(self):
 		"""
 		Examine the image's boot sector to parse sector size, cluster size, and the 
-		location of the MFT.
+		location of the MFT in bytes relative to the start of the image.
 		"""
 		try:
-			self.fd.read(10)	#skip 0 thru 10
+			self.fd.read(11)	#skip 0 thru 10
 			bytes_per_sector = unpack("<H", self.fd.read(2))[0]		#bytes 11-12
 			sectors_per_cluster = unpack("<B", self.fd.read(1))[0]	#byte 13
-			bytes_per_cluster = bytes_per_sector * sectors_per_cluster
 			self.fd.read(34)	#skip 14 thru 47
-			MFT_start_in_clusters = unpack("<q", self.fd.read(8))[0]	#bytes 4
+			MFT_start_in_clusters = unpack("<q", self.fd.read(8))[0]	#bytes 48-55
+			bytes_per_cluster = bytes_per_sector * sectors_per_cluster
 			MFT_start_in_bytes = bytes_per_cluster * MFT_start_in_clusters
-			print(MFT_start_in_bytes) 
+			self.fd.seek(MFT_start_in_bytes)	#navigate to start of $MFT
+
 		except:
 			print("Unexpected error while reading boot sector:", sys.exc_info()[0])
 			sys.exit()
+
+	#
+	## At this point in time you have gotten to the start of the $MFT (we hope)
+	## Your next step is to parse the data of Table 13.1
+	## Good luck soldier
+	#
 
 
 def usage():
