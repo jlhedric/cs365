@@ -59,34 +59,21 @@ class istat:
 		"""
 		MFT_start_in_bytes = MFT_start_in_bytes
 		try:
-			signature = bytes.decode(self.fd.read(4))		#bytes 0-3
-			print(signature)
-			fixup_offset = unpack("<H", self.fd.read(2))[0]			#bytes 4-5
-			fixup_num_entries = unpack("<H", self.fd.read(2))[0]		#bytes 6-7
-			logfile_seq_num = unpack("<q", self.fd.read(8))[0]		#bytes 8-15
-			print(logfile_seq_num)
-			seq_val = unpack("<H", self.fd.read(2))[0]		#bytes 16-17
-			print(seq_val)
-			link_count = unpack("<H", self.fd.read(2))[0]		#bytes 18-19
-			print(link_count)
-			first_attr_offset = unpack("<H", self.fd.read(2))[0]		#bytes 20-21
-			print(first_attr_offset)
-			flags = unpack("<H", self.fd.read(2))[0]		#bytes 22-23
-			used_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 24-27
-			print(used_entry_size)
-			allocated_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 28-31
-			print(allocated_entry_size)
-			file_ref_to_base = unpack("<q", self.fd.read(8))[0]		#bytes 32-39
-			next_attr_id = unpack("<H", self.fd.read(2))[0]		#bytes 40-41
-			prnt(next_attr_id)
-
-			self.fd.seek(MFT_start_in_bytes+fixup_offset)		#navigate to start of fixup array
-			fixup_array = self.fd.read(fixup_num_entries)		#create byte array of fixup
-			self.fd.seek(MFT_start_in_bytes+first_attr_offset)		#navigate to first attribute
+			signature = bytes.decode(self.fd.read(4))
+			fixup_offset = unpack("<H", self.fd.read(2))[0]	
+			fixup_num_entries = unpack("<H", self.fd.read(2))[0]
+			logfile_seq_num = unpack("<q", self.fd.read(8))[0]
+			seq_val = unpack("<H", self.fd.read(2))[0]	
+			link_count = unpack("<H", self.fd.read(2))[0]
+			first_attr_offset = unpack("<H", self.fd.read(2))[0]	
+			flags = unpack("<H", self.fd.read(2))[0]
+			used_entry_size = unpack("<L", self.fd.read(4))[0]
+			allocated_entry_size = unpack("<L", self.fd.read(4))[0]
+			file_ref_to_base = unpack("<q", self.fd.read(8))[0]
+			next_attr_id = unpack("<H", self.fd.read(2))[0]
 		except:
 			print("Unexpected error while reading MFT entry:", sys.exc_info()[0])
 			sys.exit()
-
 
 
 
