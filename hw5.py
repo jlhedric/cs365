@@ -78,7 +78,7 @@ class istat:
 			print(allocated_entry_size)
 			file_ref_to_base = unpack("<q", self.fd.read(8))[0]		#bytes 32-39
 			next_attr_id = unpack("<H", self.fd.read(2))[0]		#bytes 40-41
-			prnt(next_attr_id)
+			print(next_attr_id)
 
 			self.fd.seek(MFT_start_in_bytes+fixup_offset)		#navigate to start of fixup array
 			fixup_array = self.fd.read(fixup_num_entries)		#create byte array of fixup
