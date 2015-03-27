@@ -7,7 +7,7 @@ import sys
 import math
 from struct import unpack
 
-FAT16_ENTRY_SIZE = 32
+MFT_ENTRY_SIZE = 1024
 
 class istat:
 
@@ -17,21 +17,21 @@ class istat:
 		self.fd = self.open_file()
 		
 	def open_file(self):
-	    """ 
-	    Author: Brian Levine
-	    Opens image_name, and calls usage() on error.
-	    Returns:
-	      an open file descriptor
-	    """
+		""" 
+		Author: Brian Levine
+		Opens image_name, and calls usage() on error.
+		Returns:
+		  an open file descriptor
+		"""
 
-	    try:
-	      return(open(self.image_name, "rb"))
-	    except IOError as err:
-	      print("IOError opening file: \n\t%s" % err)
-	      usage()
-	    except:
-	      print("Unexpected error:", sys.exc_info()[0])
-	      usage()
+		try:
+			return(open(self.image_name, "rb"))
+		except IOError as err:
+			print("IOError opening file: \n\t%s" % err)
+			usage()
+		except:
+			print("Unexpected error:", sys.exc_info()[0])
+			usage()
 
 	def find_MFT(self):
 		"""
@@ -58,31 +58,39 @@ class istat:
 		the data from Table 13.1.
 		"""
 		MFT_start_in_bytes = MFT_start_in_bytes
-		try:
-			signature = bytes.decode(self.fd.read(4))		#bytes 0-3
-			print(signature)
-			fixup_offset = unpack("<H", self.fd.read(2))[0]			#bytes 4-5
-			fixup_num_entries = unpack("<H", self.fd.read(2))[0]		#bytes 6-7
-			logfile_seq_num = unpack("<q", self.fd.read(8))[0]		#bytes 8-15
-			print(logfile_seq_num)
-			seq_val = unpack("<H", self.fd.read(2))[0]		#bytes 16-17
-			print(seq_val)
-			link_count = unpack("<H", self.fd.read(2))[0]		#bytes 18-19
-			print(link_count)
-			first_attr_offset = unpack("<H", self.fd.read(2))[0]		#bytes 20-21
-			print(first_attr_offset)
-			flags = unpack("<H", self.fd.read(2))[0]		#bytes 22-23
-			used_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 24-27
-			print(used_entry_size)
-			allocated_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 28-31
-			print(allocated_entry_size)
-			file_ref_to_base = unpack("<q", self.fd.read(8))[0]		#bytes 32-39
-			next_attr_id = unpack("<H", self.fd.read(2))[0]		#bytes 40-41
-			print(next_attr_id)
 
-			self.fd.seek(MFT_start_in_bytes+fixup_offset)		#navigate to start of fixup array
-			fixup_array = self.fd.read(fixup_num_entries)		#create byte array of fixup
-			self.fd.seek(MFT_start_in_bytes+first_attr_offset)		#navigate to first attribute
+		try:
+			MFT_entry = self.fd.read(MFT_ENTRY_SIZE)
+		except:
+			print("Unexpected error while reading MFT entry:", sys.exc_info()[0])
+			sys.exit()
+
+
+
+			# signature = bytes.decode(self.fd.read(4))		#bytes 0-3
+			# print(signature)
+			# fixup_offset = unpack("<H", self.fd.read(2))[0]			#bytes 4-5
+			# fixup_num_entries = unpack("<H", self.fd.read(2))[0]		#bytes 6-7
+			# logfile_seq_num = unpack("<q", self.fd.read(8))[0]		#bytes 8-15
+			# print(logfile_seq_num)
+			# seq_val = unpack("<H", self.fd.read(2))[0]		#bytes 16-17
+			# print(seq_val)
+			# link_count = unpack("<H", self.fd.read(2))[0]		#bytes 18-19
+			# print(link_count)
+			# first_attr_offset = unpack("<H", self.fd.read(2))[0]		#bytes 20-21
+			# print(first_attr_offset)
+			# flags = unpack("<H", self.fd.read(2))[0]		#bytes 22-23
+			# used_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 24-27
+			# print(used_entry_size)
+			# allocated_entry_size = unpack("<L", self.fd.read(4))[0]		#bytes 28-31
+			# print(allocated_entry_size)
+			# file_ref_to_base = unpack("<q", self.fd.read(8))[0]		#bytes 32-39
+			# next_attr_id = unpack("<H", self.fd.read(2))[0]		#bytes 40-41
+			# print(next_attr_id)
+
+			# self.fd.seek(MFT_start_in_bytes+fixup_offset)		#navigate to start of fixup array
+			# fixup_array = self.fd.read(fixup_num_entries)		#create byte array of fixup
+			# self.fd.seek(MFT_start_in_bytes+first_attr_offset)		#navigate to first attribute
 		except:
 			print("Unexpected error while reading MFT entry:", sys.exc_info()[0])
 			sys.exit()
@@ -103,8 +111,8 @@ def main():
 	"""
 	if len(sys.argv) == 3:
 		try:
-		    entry_number = sys.argv[1]
-		    image_name = sys.argv[2]
+			entry_number = sys.argv[1]
+			image_name = sys.argv[2]
 		except:
 			print("Unexpected error while reading arguments:", sys.exc_info()[0])
 			sys.exit()
